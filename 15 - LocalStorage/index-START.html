@@ -26,10 +26,80 @@
   </div>
 
 <script>
-  const addItems = document.querySelector('.add-items');
-  const itemsList = document.querySelector('.plates');
-  const items = [];
+      const addItems = document.querySelector(".add-items");
+      const itemsList = document.querySelector(".plates");
+      const reset = document.querySelector(".reset");
+      const checkAll = document.querySelector(".check-all");
 
+      const items = JSON.parse(localStorage.getItem("items")) || [];
+
+      function addItem(e) {
+        e.preventDefault();
+        const text = this.querySelector("[name=item]").value;
+        const item = {
+          text,
+          done: false,
+        };
+        items.push(item);
+        populateList(items, itemsList);
+        localStorage.setItem("items", JSON.stringify(items));
+        this.reset(); // reset the input field
+      }
+
+      function populateList(plates = [], platesList) {
+        platesList.innerHTML = plates
+          .map((plate, index) => {
+            return `
+            <li>
+              <input type="checkbox" data-index=${index} id="item${index}" ${
+              plate.done ? "checked" : ""
+            } />
+              <label for="item${index}" data-index=${index}>${
+              plate.text
+            }</label>  
+              <button class="delete" data-index=${index}>X</button>
+            </li>
+           `;
+          })
+          .join("");
+      }
+
+      function toggleDone(index) {
+        items[index].done = !items[index].done;
+      }
+
+      function deleteItem(index) {
+        items.splice(index, 1);
+      }
+
+      function handleClick(e) {
+        const index = e.target.dataset.index;
+        if (e.target.matches("label")) toggleDone(index);
+        else if (e.target.matches("button")) deleteItem(index);
+
+        populateList(items, itemsList);
+        localStorage.setItem("items", JSON.stringify(items));
+      }
+
+      function resetItems() {
+        items.splice(0, items.length);
+        populateList(items, itemsList);
+        localStorage.setItem("items", JSON.stringify(items));
+      }
+
+      function checkAllItems() {
+        items.map((item) => (item.done = true));
+        populateList(items, itemsList);
+        localStorage.setItem("items", JSON.stringify(items));
+      }
+
+      addItems.addEventListener("submit", addItem);
+      itemsList.addEventListener("click", handleClick);
+      reset.addEventListener("click", resetItems);
+      checkAll.addEventListener("click", checkAllItems);
+
+      // load the items from the localStorage every time page reloads
+      populateList(items, itemsList);
 </script>
 
 
