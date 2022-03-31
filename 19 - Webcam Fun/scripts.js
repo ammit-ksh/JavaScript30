@@ -21,7 +21,7 @@ const filterImage = () => {
   ctx.drawImage(video, 0, 0, width, height);
   const pixels = ctx.getImageData(0, 0, width, height);
 
-  pixels = redEffect(pixels);
+  // pixels = redEffect(pixels);
 
   // pixels = rgbSplit(pixels);
   // ctx.globalAlpha = 0.8;
@@ -36,11 +36,22 @@ function paintToCanvas() {
   canvas.width = width;
   canvas.height = height;
 
-  if ("requestVideoFrameCallback" in HTMLVideoElement.prototype) {
-    video.requestVideoFrameCallback(paintToCanvas);
-  } else {
-    setInterval(fun, 16);
-  }
+  setInterval(() => {
+    ctx.drawImage(video, 0, 0, width, height);
+    // take the pixels out
+    let pixels = ctx.getImageData(0, 0, width, height);
+    // mess with them
+    // pixels = redEffect(pixels);
+
+    pixels = grayEffect(pixels);
+
+    // pixels = rgbSplit(pixels);
+    // ctx.globalAlpha = 0.8;
+
+    // pixels = greenScreen(pixels);
+    // put them back
+    ctx.putImageData(pixels, 0, 0);
+  }, 16);
 }
 
 function takePhoto() {
@@ -63,6 +74,22 @@ function redEffect(pixels) {
     pixels.data[i + 1] = pixels.data[i + 1] - 50; // GREEN
     pixels.data[i + 2] = pixels.data[i + 2] * 0.5; // BLUE
     // pixels[i + 3] -> ALPHA
+  }
+
+  return pixels;
+}
+
+function grayEffect(pixels) {
+  for (let i = 0; i < pixels.data.length; i += 4) {
+    const grayScale =
+      (pixels.data[i + 0] * 0.299 +
+        pixels.data[i + 1] * 0.587 +
+        pixels.data[i + 2] * 0.114) /
+      3;
+
+    pixels.data[i + 0] = grayScale;
+    pixels.data[i + 1] = grayScale;
+    pixels.data[i + 2] = grayScale;
   }
 
   return pixels;
@@ -108,9 +135,4 @@ function greenScreen(pixels) {
 
 getVideo();
 
-if ("requestVideoFrameCallback" in HTMLVideoElement.prototype) {
-  console.info("REQUEST VIDEO FRAME CALLBACK SUPPORTED!");
-  video.requestVideoFrameCallback(paintToCanvas);
-} else {
-  video.addEventListener("canplay", paintToCanvas);
-}
+video.addEventListener("canplay", paintToCanvas);
